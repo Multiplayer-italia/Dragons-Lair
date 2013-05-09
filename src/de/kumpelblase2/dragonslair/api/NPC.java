@@ -5,126 +5,131 @@ import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import de.kumpelblase2.dragonslair.*;
 import de.kumpelblase2.dragonslair.utilities.*;
+import de.kumpelblase2.remoteentities.api.RemoteEntityType;
 
 public class NPC
 {
 	private int id;
 	private String name;
-	private String skin; // does not work at the moment
+	private String skin;
 	private Location loc;
 	private Material heldItem;
 	private ItemStack[] armor;
 	private boolean shoudSpawnAtBeginning;
 	private boolean isInvincible;
-	
+	private RemoteEntityType type;
+
 	public NPC()
 	{
 		this.id = -1;
 		this.armor = new ItemStack[4];
 		this.shoudSpawnAtBeginning = false;
 		this.heldItem = Material.AIR;
+		this.type = RemoteEntityType.Human;
 	}
-	
-	public NPC(ResultSet result)
+
+	public NPC(final ResultSet result)
 	{
 		try
 		{
-			this.id = result.getInt(TableColumns.NPCs.ID.ordinal());
-			this.name = result.getString(TableColumns.NPCs.NAME.ordinal());
-			this.skin = result.getString(TableColumns.NPCs.SKIN.ordinal());
-			this.loc = WorldUtility.stringToLocation(result.getString(TableColumns.NPCs.LOCATION.ordinal()));
-			this.heldItem = Material.getMaterial(result.getInt(TableColumns.NPCs.HELD_ITEM_ID.ordinal()));
-			this.shoudSpawnAtBeginning = result.getBoolean(TableColumns.NPCs.SHOULD_SPAWN_AT_BEGINNING.ordinal());
-			this.armor = InventoryUtilities.stringToItems(result.getString(TableColumns.NPCs.ARMOR.ordinal()));
-			this.isInvincible = result.getBoolean(TableColumns.NPCs.INVINCIBLE.ordinal());
+			this.id = result.getInt(TableColumns.NPCs.ID);
+			this.name = result.getString(TableColumns.NPCs.NAME);
+			this.skin = result.getString(TableColumns.NPCs.SKIN);
+			this.loc = WorldUtility.stringToLocation(result.getString(TableColumns.NPCs.LOCATION));
+			this.heldItem = Material.getMaterial(result.getInt(TableColumns.NPCs.HELD_ITEM_ID));
+			this.shoudSpawnAtBeginning = result.getBoolean(TableColumns.NPCs.SHOULD_SPAWN_AT_BEGINNING);
+			this.armor = InventoryUtilities.stringToItems(result.getString(TableColumns.NPCs.ARMOR));
+			this.isInvincible = result.getBoolean(TableColumns.NPCs.INVINCIBLE);
+			this.type = RemoteEntityType.valueOf(result.getString(TableColumns.NPCs.TYPE));
 		}
-		catch (SQLException e)
+		catch(final SQLException e)
 		{
 			e.printStackTrace();
 		}
 	}
-	
+
 	public int getID()
 	{
 		return this.id;
 	}
-	
+
 	public String getName()
 	{
 		return this.name;
 	}
-	
-	public void setName(String inName)
+
+	public void setName(final String inName)
 	{
 		this.name = inName;
 	}
-	
+
 	public String getSkin()
 	{
 		return this.skin;
 	}
-	
-	public void setSkin(String inSkin)
+
+	public void setSkin(final String inSkin)
 	{
 		this.skin = inSkin;
 	}
-	
+
 	public Location getLocation()
 	{
 		return this.loc;
 	}
-	
+
 	public Material getHeldItem()
 	{
 		return this.heldItem;
 	}
-	
+
 	public ItemStack[] getArmorParts()
 	{
 		return this.armor;
 	}
-	
+
 	public String getWorld()
 	{
 		return this.loc.getWorld().getName();
 	}
-	
-	public void setWorld(String w)
+
+	public void setWorld(final String w)
 	{
 		this.loc.setWorld(Bukkit.getWorld(w));
 	}
-	
+
 	public boolean shouldSpawnAtBeginning()
 	{
 		return this.shoudSpawnAtBeginning;
 	}
-	
+
 	public boolean isInvincible()
 	{
 		return this.isInvincible;
 	}
-	
-	public void setInvincible(boolean invincible)
+
+	public void setInvincible(final boolean invincible)
 	{
 		this.isInvincible = invincible;
 	}
 	
+	public RemoteEntityType getType()
+	{
+		return this.type;
+	}
+	
+	public void setType(RemoteEntityType inType)
+	{
+		this.type = inType;
+	}
+
 	public void save()
 	{
 		try
-		{			
+		{
 			if(this.id != -1)
 			{
-				PreparedStatement st = DragonsLairMain.createStatement("REPLACE INTO " + Tables.NPCS + "(" +
-						"npc_id," +
-						"npc_name," +
-						"npc_skin," +
-						"npc_location," +
-						"npc_held_item," +
-						"npc_armor," +
-						"npc_spawned_from_beginning," +
-						"npc_invincible" +
-						") VALUES(?,?,?,?,?,?,?,?)");
+				final PreparedStatement st = DragonsLairMain.createStatement("REPLACE INTO " + Tables.NPCS + "(" + "npc_id," + "npc_name," + "npc_skin," + "npc_location," + "npc_held_item," + "npc_armor," + "npc_spawned_from_beginning," + "npc_invincible,"  + "npc_type" + ") VALUES(?,?,?,?,?,?,?,?,?)");
 				st.setInt(1, this.id);
 				st.setString(2, this.name);
 				st.setString(3, this.skin);
@@ -133,19 +138,12 @@ public class NPC
 				st.setString(6, InventoryUtilities.itemsToString(this.armor));
 				st.setBoolean(7, this.shoudSpawnAtBeginning);
 				st.setBoolean(8, this.isInvincible);
+				st.setString(9, this.type.name());
 				st.execute();
 			}
 			else
 			{
-				PreparedStatement st = DragonsLairMain.createStatement("INSERT INTO " + Tables.NPCS + "(" +
-						"npc_name," +
-						"npc_skin," +
-						"npc_location," +
-						"npc_held_item," +
-						"npc_armor," +
-						"npc_spawned_from_beginning," +
-						"npc_invincible" +
-						") VALUES(?,?,?,?,?,?,?)");
+				final PreparedStatement st = DragonsLairMain.createStatement("INSERT INTO " + Tables.NPCS + "(" + "npc_name," + "npc_skin," + "npc_location," + "npc_held_item," + "npc_armor," + "npc_spawned_from_beginning," + "npc_invincible," + "npc_type" + ") VALUES(?,?,?,?,?,?,?,?)");
 				st.setString(1, this.name);
 				st.setString(2, this.skin);
 				st.setString(3, WorldUtility.locationToString(this.loc));
@@ -153,48 +151,49 @@ public class NPC
 				st.setString(5, InventoryUtilities.itemsToString(this.armor));
 				st.setBoolean(6, this.shoudSpawnAtBeginning);
 				st.setBoolean(7, this.isInvincible);
+				st.setString(8, this.type.name());
 				st.execute();
-				ResultSet keys = st.getGeneratedKeys();
+				final ResultSet keys = st.getGeneratedKeys();
 				if(keys.next())
 					this.id = keys.getInt(1);
 			}
 		}
-		catch(Exception e)
+		catch(final Exception e)
 		{
 			DragonsLairMain.Log.warning("Unable to save npc " + this.id);
 			DragonsLairMain.Log.warning(e.getMessage());
 		}
 	}
 
-	public void setLocation(Location location)
+	public void setLocation(final Location location)
 	{
 		this.loc = location;
 	}
 
-	public void setArmor(ItemStack[] itemStacks)
+	public void setArmor(final ItemStack[] itemStacks)
 	{
 		this.armor = itemStacks;
 	}
 
-	public void setHeldItem(Material mat)
+	public void setHeldItem(final Material mat)
 	{
 		this.heldItem = mat;
 	}
-	
-	public void shouldSpawnAtBeginning(boolean should)
+
+	public void shouldSpawnAtBeginning(final boolean should)
 	{
 		this.shoudSpawnAtBeginning = should;
 	}
-	
+
 	public void remove()
 	{
 		try
 		{
-			PreparedStatement st = DragonsLairMain.createStatement("DELETE FROM " + Tables.NPCS + " WHERE `npc_id` = ?");
+			final PreparedStatement st = DragonsLairMain.createStatement("DELETE FROM " + Tables.NPCS + " WHERE `npc_id` = ?");
 			st.setInt(1, this.getID());
 			st.execute();
 		}
-		catch(Exception e)
+		catch(final Exception e)
 		{
 			DragonsLairMain.Log.warning("Unable to remove npc from database: " + e.getMessage());
 		}

@@ -5,47 +5,48 @@ import org.bukkit.conversations.*;
 import org.bukkit.entity.Player;
 import de.kumpelblase2.dragonslair.DragonsLairMain;
 import de.kumpelblase2.dragonslair.api.Dialog;
+import de.kumpelblase2.dragonslair.api.NPC;
 import de.kumpelblase2.dragonslair.events.conversation.ConversationNextDialogEvent;
 import de.kumpelblase2.dragonslair.utilities.GeneralUtilities;
 
-
 public class StorylineQuestionPromt extends ValidatingPrompt
 {
-	private Dialog dialog;
-	private String npcname;
-	
-	public StorylineQuestionPromt(Dialog d, String name)
+	private final Dialog dialog;
+	private final NPC npc;
+
+	public StorylineQuestionPromt(final Dialog d, final NPC inNPC)
 	{
 		this.dialog = d;
-		this.npcname = name;
-	}
-	
-	@Override
-	public String getPromptText(ConversationContext arg0)
-	{
-		return GeneralUtilities.replaceColors("<" + this.npcname + ">" + this.dialog.getText().replace("#player#", ((Player)arg0.getForWhom()).getName()));
+		this.npc = inNPC;
 	}
 
 	@Override
-	protected Prompt acceptValidatedInput(ConversationContext arg0, String arg1)
+	public String getPromptText(final ConversationContext arg0)
 	{
-		AnswerType type = new AnswerConverter(arg1).convert();
-		ConversationNextDialogEvent event = new ConversationNextDialogEvent(this.npcname, DragonsLairMain.getInstance().getConversationHandler().getConversations().get(((Player)arg0.getForWhom()).getName()).getConversation(), this.dialog.getNextID(type));
+		return GeneralUtilities.replaceColors("<" + this.npc.getName() + ">" + this.dialog.getText().replace("#player#", ((Player)arg0.getForWhom()).getName()));
+	}
+
+	@Override
+	protected Prompt acceptValidatedInput(final ConversationContext arg0, final String arg1)
+	{
+		final AnswerType type = new AnswerConverter(arg1).convert();
+		final ConversationNextDialogEvent event = new ConversationNextDialogEvent((Player)arg0.getForWhom(), this.npc.getID(), DragonsLairMain.getInstance().getConversationHandler().getConversations().get(((Player)arg0.getForWhom()).getName()).getConversation(), this.dialog.getNextID(type));
 		Bukkit.getPluginManager().callEvent(event);
 		if(event.isCancelled())
 			return this;
-		
-		return ConversationHandler.getPromptByID(this.dialog.getNextID(type), this.npcname);
+		final Integer next = this.dialog.getNextID(type);
+		if(next == 0)
+			return END_OF_CONVERSATION;
+		return ConversationHandler.getPromptByID(next, this.npc);
 	}
 
 	@Override
-	protected boolean isInputValid(ConversationContext arg0, String arg1)
+	protected boolean isInputValid(final ConversationContext arg0, final String arg1)
 	{
-		AnswerType type = new AnswerConverter(arg1).convert();
+		final AnswerType type = new AnswerConverter(arg1).convert();
 		if(type != AnswerType.NOTHING)
 			return true;
-		
-		arg0.getForWhom().sendRawMessage("<" + this.npcname + ">" + "I don't get what you mean.");
+		arg0.getForWhom().sendRawMessage("<" + this.npc.getName() + ">" + "I don't get what you mean.");
 		return false;
 	}
 }

@@ -2,48 +2,42 @@ package de.kumpelblase2.dragonslair.api.eventexecutors;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import com.topcat.npclib.entity.HumanNPC;
 import de.kumpelblase2.dragonslair.DragonsLairMain;
 import de.kumpelblase2.dragonslair.api.Event;
 import de.kumpelblase2.dragonslair.api.NPC;
+import de.kumpelblase2.remoteentities.api.RemoteEntity;
 
 public class NPCWalkToEventExecutor implements EventExecutor
 {
-
 	@Override
-	public boolean executeEvent(Event e, Player p)
+	public boolean executeEvent(final Event e, final Player p)
 	{
-		String npcid = e.getOption("npc_id");
+		final String npcid = e.getOption("npc_id");
 		try
 		{
 			NPC n = DragonsLairMain.getSettings().getNPCByName(npcid);
 			if(n == null)
 			{
-				int id = Integer.parseInt(npcid);
+				final Integer id = Integer.parseInt(npcid);
 				n = DragonsLairMain.getSettings().getNPCs().get(id);
 				if(n == null)
 					return false;
 			}
-			
-			String x = e.getOption("x");
-			String y = e.getOption("y");
-			String z = e.getOption("z");
-			
+			final String x = e.getOption("x");
+			final String y = e.getOption("y");
+			final String z = e.getOption("z");
 			if(x == null || y == null || z == null)
 				return false;
-			
-			HumanNPC npc = DragonsLairMain.getDungeonManager().getNPCByName(n.getName());
+			final RemoteEntity npc = DragonsLairMain.getDungeonManager().getNPCManager().getByDatabaseID(n.getID());
 			if(npc != null)
-				npc.walkTo(new Location(npc.getBukkitEntity().getLocation().getWorld(), Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(z)));
-			
+				npc.move(new Location(npc.getBukkitEntity().getLocation().getWorld(), Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(z)));
 			return true;
 		}
-		catch(Exception ex)
+		catch(final Exception ex)
 		{
 			DragonsLairMain.Log.warning("Unable to stop npc attack from event: " + e.getID());
 			DragonsLairMain.Log.warning(ex.getMessage());
 		}
 		return false;
 	}
-
 }
